@@ -23,7 +23,7 @@ char message[BUFSIZE];
 int err;
 
 int main(int argc, char **argv){
-	char str[30];
+	char str[10]="012345678";
     serv_sock = socket(PF_INET, SOCK_STREAM, 0);    /* 서버 소켓 생성 */
     if(serv_sock == -1)
         error_handling("socket() error");
@@ -49,7 +49,7 @@ int main(int argc, char **argv){
 		
 		if(ret_pid == 0){
 			read(clnt_sock, str, BUFSIZE);
-            int len = sprintf(message, "your input is %s", str);
+            int len = sprintf(message, "%s", str);
             printf("Child:input is %s, len is %d\n", message, len);
             write(clnt_sock, message, len);
 			close(clnt_sock);
@@ -57,6 +57,11 @@ int main(int argc, char **argv){
 		}
 		else{
 			printf("Connected!\n");
+            childpid = wait(&state);
+            if(WEXITSTATUS(state)!=1){
+                printf("smash!\n");
+				write(clnt_sock, "smash!\n",sizeof("smash!\n")-1);
+            }
 			printf("Disconnected with exit state %d\n", WEXITSTATUS(state));
 			close(clnt_sock);
 		}
