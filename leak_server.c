@@ -15,15 +15,15 @@ pid_t ret_pid, childpid;
 int state;
 int serv_sock;
 int clnt_sock;
-char message[BUFSIZE];
 int str_len;
 struct sockaddr_in serv_addr;
 struct sockaddr_in clnt_addr;
 int clnt_addr_size;
+char message[BUFSIZE];
 int err;
 
 int main(int argc, char **argv){
-	char str[10];
+	char str[30];
     serv_sock = socket(PF_INET, SOCK_STREAM, 0);    /* 서버 소켓 생성 */
     if(serv_sock == -1)
         error_handling("socket() error");
@@ -31,7 +31,7 @@ int main(int argc, char **argv){
 	memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(12345);
+    serv_addr.sin_port = htons(7778);
 
     /* 소켓에 주소 할당 */
 	if(err=bind(serv_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr) )==-1)
@@ -48,20 +48,16 @@ int main(int argc, char **argv){
 		ret_pid = fork();
 		
 		if(ret_pid == 0){
-			str_len = read(clnt_sock, str, BUFSIZE);
+			read(clnt_sock, str, BUFSIZE);
+            int len = sprintf(message, "your input is %s", str);
+            printf("Child:input is %s, len is %d\n", message, len);
+            write(clnt_sock, message, len);
 			close(clnt_sock);
 			return 1;
 		}
 		else{
 			printf("Connected!\n");
-			childpid = wait(&state);
 			printf("Disconnected with exit state %d\n", WEXITSTATUS(state));
-			if(WEXITSTATUS(state) != 1){
-				printf("Stack smashed with end state %d\n", WEXITSTATUS(state));
-				write(clnt_sock, "smash!", sizeof("smash"));
-			}
-			else
-				write(clnt_sock, "clear!", sizeof("clear!"));
 			close(clnt_sock);
 		}
 	}
